@@ -1,0 +1,50 @@
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <string.h> 
+#include <sys/socket.h> 
+#include <sys/types.h> 
+#include <netinet/in.h> 
+#include <arpa/inet.h> 
+#include <netdb.h> 
+#include <unistd.h>  
+#define PORT 9600 
+#define SIZE 100 
+int main(int argc, char **argv) 
+{ 
+    //sockfd le descripteur du serveur 
+    int sockfd, newsockfd; 
+    //structure d'adresse locale du serveur(serverAddr) et du client(clientAddr) 
+    struct sockaddr_in serverAddr, clientAddr; 
+    //taille de l'adresse du client 
+    socklen_t other_size; 
+    char buffer[SIZE]; 
+    //Ouvrir le socket du serveur 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+    //Remplir la structure d'adresse locale du serveur 
+    memset(&serverAddr, '\0', sizeof(serverAddr)); 
+    //la famille d'adresse 
+    serverAddr.sin_family = AF_INET; 
+    //le port 
+    serverAddr.sin_port = htons(PORT); 
+    //l'adresse IP 
+    serverAddr.sin_addr.s_addr = INADDR_ANY; 
+    //Spécifier(bind) l'adresse locale di socket du serveur 
+    if(bind(sockfd, (struct sockaddr*)& serverAddr, sizeof(serverAddr)) < 0) 
+    { 
+        perror("Error: socket already taken!"); 
+        return(1); 
+    } 
+    listen(sockfd,5); 
+    other_size = sizeof(clientAddr); 
+    while(1) 
+    { 
+        newsockfd = accept(sockfd,(struct sockaddr *) & clientAddr, &other_size); 
+        if (newsockfd < 0) 
+            perror("ERROR on accept"); 
+        // bzero same as memset with '/0' 
+        bzero(buffer, SIZE); 
+        read(newsockfd,buffer,SIZE); 
+        printf("Received following message: %s\n",buffer); 
+        write(newsockfd,"message acquitted!",17); 
+    } 
+} 
